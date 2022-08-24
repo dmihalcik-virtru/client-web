@@ -17,6 +17,7 @@ bin/opentdf.mjs encrypt \
   --output sample.tdf \
   sample.txt
 bin/opentdf.mjs \
+  --log-level debug \
   --kasEndpoint http://localhost:65432/api/kas \
   --oidcEndpoint http://localhost:65432 \
   --auth tdf:tdf-client:123-456 \

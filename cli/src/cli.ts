@@ -52,6 +52,15 @@ async function processAuth({
   );
 }
 
+async function debugAuth(client: NanoTDFClient) {
+  try {
+    const token = await client.authProvider.authorization();
+    return token;
+  } catch (e) {
+    return e;
+  }
+}
+
 async function processDataIn(file: string) {
   if (!file) {
     throw new CLIError('CRITICAL', 'Must specify file or pipe');
@@ -203,10 +212,12 @@ export const handleArgs = (args: string[]) => {
             log('DEBUG', 'Running decrypt command');
             const client = await processAuth(argv);
             const buffer = await processDataIn(argv.file as string);
+            log('DEBUG', `Auth token before decrypt: [${await debugAuth(client)}]`);
 
             log('DEBUG', 'Decrypt data.');
             const plaintext = await client.decrypt(buffer);
 
+            log('DEBUG', `Auth token after decrypt: [${await debugAuth(client)}]`);
             log('DEBUG', 'Handle output.');
             if (argv.output) {
               await writeFile(argv.output, Buffer.from(plaintext));
@@ -233,6 +244,7 @@ export const handleArgs = (args: string[]) => {
             log('DEBUG', 'Running encrypt command');
             const client = await processAuth(argv);
 
+            log('DEBUG', `Auth token before encrypt: [${await debugAuth(client)}]`);
             log('SILLY', 'Build encrypt params');
             if (argv.attributes?.length) {
               client.dataAttributes = argv.attributes.split(',');
@@ -244,12 +256,14 @@ export const handleArgs = (args: string[]) => {
             const buffer = await processDataIn(argv.file as string);
             const cyphertext = await client.encrypt(buffer);
 
+            log('DEBUG', `Auth token after encrypt: [${await debugAuth(client)}]`);
             log('DEBUG', 'Handle cyphertext output');
             if (argv.output) {
               await writeFile(argv.output, Buffer.from(cyphertext));
             } else {
               console.log(Buffer.from(cyphertext).toString('base64'));
             }
+            log('DEBUG', `Auth token after write: [${await debugAuth(client)}]`);
           } catch (e) {
             log(e);
           }
