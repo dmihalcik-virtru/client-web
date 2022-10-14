@@ -1,6 +1,5 @@
 {
   "plugins": [
-    ["@babel/plugin-transform-runtime", { "corejs": 3, "proposals": true }],
     ["module-resolver", {
       "alias": {
         "@readableStream": "./tdf3/src/client/stream-web-node.ts",
@@ -15,7 +14,7 @@
       "@babel/preset-env",
       {
         "targets": {
-          "ie": "11"
+          "chrome": "100"
         }
       }
     ],
