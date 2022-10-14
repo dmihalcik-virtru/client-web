@@ -1,6 +1,4 @@
-/* eslint @typescript-eslint/ban-ts-comment: "off" */
-
-import { expect } from 'chai';
+import { expect } from '@esm-bundle/chai';
 import { NanoTDF } from '../../src/nanotdf/index.js';
 import PolicyTypeEnum from '../../src/nanotdf/enum/PolicyTypeEnum.js';
 import bufferToHex from './helpers/bufferToHex.js';

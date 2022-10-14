@@ -5,7 +5,7 @@ import type AttributeObjectJwt from './AttributeObjectJwt.js';
  * this object (when accompanied by a valid cert) defines what attributes
  * a client has access to.
  */
-export default interface EntityObject {
+export interface EntityObject {
   readonly aliases: string[];
   readonly attributes: AttributeObjectJwt[];
   /** This should be present on validated EOs only - it is written by an EAS */
