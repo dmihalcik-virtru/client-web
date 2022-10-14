@@ -1,6 +1,6 @@
 import { createWriteStream } from 'fs';
 import { buffer, text } from 'node:stream/consumers';
-import DecoratedReadableStream from './DecoratedReadableStream';
+import DecoratedReadableStream from './DecoratedReadableStream.js';
 import { toWebReadableStream } from 'web-streams-node';
 
 class NodeTdfStream extends DecoratedReadableStream {

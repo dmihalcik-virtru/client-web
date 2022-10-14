@@ -1,4 +1,4 @@
-import PolicyTypeEnum from '../nanotdf/enum/PolicyTypeEnum';
+import PolicyTypeEnum from '../nanotdf/enum/PolicyTypeEnum.js';
 
 export type InputSource = ReadableStream | Buffer | string | ArrayBuffer | NodeJS.ReadableStream;
 

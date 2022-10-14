@@ -1,7 +1,8 @@
-import DecoratedReadableStream from './DecoratedReadableStream';
+import DecoratedReadableStream from './DecoratedReadableStream.js';
 import streamSaver from 'streamsaver';
+// @ts-ignore
 import { fileSave } from 'browser-fs-access';
-import { isFirefox } from '../../../src/utils';
+import { isFirefox } from '../../../src/utils.js';
 
 class BrowserTdfStream extends DecoratedReadableStream {
   static convertToWebStream() {

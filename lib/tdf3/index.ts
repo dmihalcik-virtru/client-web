@@ -1,12 +1,11 @@
-import { TDF, Client } from './src/index';
+import { TDF, Client, FileClient } from './src/index.js';
 import {
   NanoTDFClient,
   NanoTDFDatasetClient,
   AuthProviders,
   version,
   clientType,
-} from '../src/index';
-import { FileClient } from './src/FileClient';
+} from '../src/index.js';
 
 import fetch from 'node-fetch';
 import { webcrypto as crypto } from 'node:crypto';

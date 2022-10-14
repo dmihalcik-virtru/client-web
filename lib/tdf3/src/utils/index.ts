@@ -1,8 +1,8 @@
-export { ZipReader, readUInt64LE } from './zip-reader';
-export { ZipWriter } from './zip-writer';
-export { keySplit, keyMerge } from './keysplit';
-import { TdfStream } from '../client/tdf-stream';
-export * from './chunkers';
+export { ZipReader, readUInt64LE } from './zip-reader.js';
+export { ZipWriter } from './zip-writer.js';
+export { keySplit, keyMerge } from './keysplit.js';
+import { TdfStream } from '../client/tdf-stream.js';
+export * from './chunkers.js';
 
 export function inBrowser(): boolean {
   return typeof window !== 'undefined';

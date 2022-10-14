@@ -1,9 +1,9 @@
-import { Client as ClientTdf3 } from './client/index';
-import { DecryptParamsBuilder, EncryptParamsBuilder } from './client/builders';
-import { type AnyTdfStream } from './client/tdf-stream';
-import { type EncryptParams, type DecryptParams } from './client/builders';
-import { type InputSource } from '../../src/types';
-import { type AuthProvider } from '../../src/auth/auth';
+import { Client as ClientTdf3 } from './client/index.js';
+import { DecryptParamsBuilder, EncryptParamsBuilder } from './client/builders.js';
+import { type AnyTdfStream } from './client/tdf-stream.js';
+import { type EncryptParams, type DecryptParams } from './client/builders.js';
+import { type InputSource } from '../../src/types/index.js';
+import { type AuthProvider } from '../../src/auth/auth.js';
 
 interface FileClientConfig {
   clientId?: string;

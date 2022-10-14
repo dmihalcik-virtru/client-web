@@ -4,14 +4,14 @@ import {
   CompleteMultipartUploadCommandOutput,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { VirtruS3Config, VirtruTempS3Credentials, VirtruCreds } from './builders';
-import { Upload } from '../utils/aws-lib-storage/index';
-import { Options } from '../utils/aws-lib-storage/types';
+import { VirtruS3Config, VirtruTempS3Credentials, VirtruCreds } from './builders.js';
+import { Upload } from '../utils/aws-lib-storage/index.js';
+import { Options } from '../utils/aws-lib-storage/types.js';
 import stream from '@readableStream';
-import Metadata from '../tdf';
+import Metadata from '../tdf.js';
 
 import { EventEmitter } from 'events';
-import { Manifest } from '../models/index';
+import { Manifest } from '../models/index.js';
 
 class DecoratedReadableStream {
   KEK: string;
