@@ -9,6 +9,7 @@
     }]
   ],
   "ignore": ["**/*.html"],
+  "include": ["**/*.ts"],
   "presets": [
     [
       "@babel/preset-env",
