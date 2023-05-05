@@ -46,7 +46,7 @@ import { htmlWrapperTemplate } from './templates/index.js';
 
 // configurable
 // TODO: remove dependencies from ciphers so that we can open-source instead of relying on other Virtru libs
-import { AesGcmCipher } from './ciphers/index.js';
+import { AesGcmCipher } from './ciphers.js';
 import {
   AuthProvider,
   AppIdAuthProvider,

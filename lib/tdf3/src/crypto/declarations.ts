@@ -49,12 +49,6 @@ export type CryptoService = {
 
   encryptWithPublicKey: (payload: Binary, publicKey: string) => Promise<Binary>;
 
-  /** Get length random bytes as a hex-encoded string. */
-  generateInitializationVector: (length: number) => string;
-
-  /** Get length random bytes as a hex-encoded string. */
-  generateKey: (length: number) => string;
-
   /**
    * Generate an RSA key pair
    * @param size in bits, defaults to a reasonable size for the default method
@@ -65,6 +59,8 @@ export type CryptoService = {
    * Create an HMAC SHA256 hash
    */
   hmac: (key: string, content: string) => Promise<string>;
+
+  randomBytes: (byteLength: number) => Uint8Array;
 
   /** Compute the hex-encoded SHA hash of a UTF-16 encoded string. */
   sha256: (content: string) => Promise<string>;

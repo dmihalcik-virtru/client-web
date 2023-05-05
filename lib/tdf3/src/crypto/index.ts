@@ -4,7 +4,7 @@
  * @private
  */
 
-import { Algorithms } from '../ciphers/index.js';
+import { Algorithms } from '../ciphers.js';
 import { Binary } from '../binary.js';
 import {
   DecryptResult,
@@ -64,14 +64,6 @@ export function rsaPkcs1Sha256(
 }
 
 /**
- * Generate a random hex key
- * @return New key as a hex string
- */
-export function generateKey(length?: number): string {
-  return randomBytesAsHex(length || 32);
-}
-
-/**
  * Generate an RSA key pair
  * @see    {@link https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/generateKey}
  * @param  size in bits
@@ -121,34 +113,10 @@ export async function encryptWithPublicKey(payload: Binary, publicKey: string): 
   return Binary.fromArrayBuffer(result);
 }
 
-/**
- * Generate a 16-byte initialization vector
- */
-export function generateInitializationVector(length?: number): string {
-  return randomBytesAsHex(length || 16);
-}
-
 export function randomBytes(byteLength: number): Uint8Array {
   const r = new Uint8Array(byteLength);
   crypto.getRandomValues(r);
   return r;
-}
-
-/**
- * Returns a promise to the encryption key as a binary string.
- *
- * Note: This function should almost never fail as it includes a fallback
- * if for some reason the native generate key fails.
- *
- * @param length The key length, defaults to 256
- *
- * @returns The hex string.
- */
-export function randomBytesAsHex(length: number): string {
-  // Create a typed array of the correct length to fill
-  const r = new Uint8Array(length);
-  crypto.getRandomValues(r);
-  return hexEncode(r.buffer);
 }
 
 /**
@@ -214,6 +182,8 @@ export function encrypt(
   return _doEncrypt(payload, key, iv, algorithm);
 }
 
+const usedKeys: Record<string, Set<string>> = {};
+
 async function _doEncrypt(
   payload: Binary,
   key: Binary,
@@ -226,6 +196,16 @@ async function _doEncrypt(
 
   const payloadBuffer = payload.asArrayBuffer();
   const algoDomString = getSymmetricAlgoDomString(iv, algorithm);
+  const ks = base64Encode(key.asArrayBuffer());
+  const ivs = base64Encode(iv.asArrayBuffer());
+  if (usedKeys[ks]) {
+    const s = usedKeys[ks];
+    if (s.has(ivs)) {
+      throw new Error('i.v. reuse error');
+    }
+  } else {
+    usedKeys[ks] = new Set([ivs]);
+  }
 
   const importedKey = await _importKey(key, algoDomString);
   const encrypted = await crypto.subtle.encrypt(algoDomString, importedKey, payloadBuffer);

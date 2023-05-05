@@ -1,22 +1,20 @@
 import { assert, expect } from 'chai';
 
-import { Algorithms } from '../../../../tdf3/src/ciphers/index.js';
+import { Algorithms } from '../../../../tdf3/src/ciphers.js';
 import {
   cryptoToPemPair,
   decrypt,
   decryptWithPrivateKey,
   encrypt,
   encryptWithPublicKey,
-  generateInitializationVector,
-  generateKey,
   generateKeyPair,
   hex2Ab,
   hmac,
-  randomBytesAsHex,
   sha256,
 } from '../../../../tdf3/src/crypto/index.js';
 import { Binary } from '../../../../tdf3/src/binary.js';
 import { decodeArrayBuffer, encodeArrayBuffer } from '../../../../src/encodings/base64.js';
+import { randomBytes } from 'crypto';
 
 describe('Crypto Service', () => {
   describe('hmac', () => {
@@ -57,34 +55,6 @@ describe('Crypto Service', () => {
     });
   });
 
-  describe('generateKey', () => {
-    it('default length (32 bytes)', () => {
-      const key = generateKey(0);
-      expect(key).to.be.a('string');
-      expect(key).to.have.lengthOf(32 << 1);
-    });
-    it('short', () => {
-      const key = generateKey(1);
-      expect(key).to.be.a('string');
-      expect(key).to.have.lengthOf(2);
-    });
-    it('reasonable bytes', () => {
-      const key = generateKey(20);
-      expect(key).to.be.a('string');
-      expect(key).to.have.lengthOf(40);
-    });
-    it('undefined bytes', () => {
-      const key = generateKey(undefined);
-      expect(key).to.be.a('string');
-      expect(key).to.have.lengthOf(64);
-    });
-    it('null bytes', () => {
-      const key = generateKey();
-      expect(key).to.be.a('string');
-      expect(key).to.have.lengthOf(64);
-    });
-  });
-
   describe('generateKeyPair', () => {
     it('should generate pair with undefined', async () => {
       const obj = await generateKeyPair(undefined);
@@ -118,27 +88,6 @@ describe('Crypto Service', () => {
           expect(e.message).to.match(/Invalid key size requested/);
         }
       });
-    });
-  });
-
-  describe('generateInitializationVector', () => {
-    it('iv - just one byte', async () => {
-      expect(generateInitializationVector(1)).to.have.lengthOf(2);
-    });
-    it('iv - standard length (16)', () => {
-      const iv = generateInitializationVector();
-      expect(iv).to.have.lengthOf(32);
-    });
-  });
-
-  describe('randomBytesAsHex', () => {
-    it('1 byte', () => {
-      const randomHexBytes = randomBytesAsHex(1);
-      expect(randomHexBytes).to.have.lengthOf(2);
-    });
-    it('10 bytes', () => {
-      const randomHexBytes2 = randomBytesAsHex(10);
-      expect(randomHexBytes2).to.have.lengthOf(20);
     });
   });
 
@@ -204,7 +153,7 @@ describe('Crypto Service', () => {
       // crypto.scryptSync('test', 'salt', 32) =>
       decodeArrayBuffer('cvR6X2vLG5ap13ssLxRjOV1KOjJfraYpD8D+97zdtY4=')
     );
-    const iv = Binary.fromString(generateInitializationVector(16));
+    const iv = Binary.fromArrayBuffer(randomBytes(16));
     const algo = 'http://www.w3.org/2009/xmlenc11#aes256-gcm';
 
     const encrypted = await encrypt(payload, key, iv, algo);

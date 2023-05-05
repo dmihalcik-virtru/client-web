@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 
 import { bxor, keySplit, keyMerge } from '../../../tdf3/src/utils/keysplit.js';
-import { generateKey } from '../../../tdf3/src/crypto/index.js';
-import { hex } from '../../../src/encodings/index.js';
+import { randomBytes } from '../../../tdf3/src/crypto/index.js';
 import { Binary } from '../../../tdf3/src/binary.js';
 
 describe('keysplits', () => {
@@ -25,12 +24,12 @@ describe('keysplits', () => {
     expect(keyMerge(splits)).to.eql(expected);
   });
 
-  it(`should serialize hex key into Binary and back`, () => {
-    const key = generateKey(4);
+  it(`random round trip no split`, () => {
+    const key = randomBytes(4);
 
-    const unwrappedKeyBinary = Binary.fromString(hex.decode(key));
+    const unwrappedKeyBinary = Binary.fromArrayBuffer(key);
     const splits = keySplit(unwrappedKeyBinary.asBuffer(), 1);
 
-    expect(hex.encodeArrayBuffer(splits[0])).to.eql(key);
+    expect(splits[0]).to.eql(key);
   });
 });
