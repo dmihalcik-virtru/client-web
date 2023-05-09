@@ -616,6 +616,9 @@ export class TDF extends EventEmitter {
     );
     const payloadBuffer = encryptedBlargh.payload.asBuffer();
     const encryptedSegmentSizeDefault = payloadBuffer.length;
+    console.log(
+      `Segments of size ${segmentSizeDefault} are encrypted to size ${encryptedSegmentSizeDefault}`
+    );
 
     // start writing the content
     entryInfos[0].filename = '0.payload';
@@ -774,7 +777,6 @@ export class TDF extends EventEmitter {
       if (progressHandler) {
         progressHandler(bytesProcessed);
       }
-      // Don't pass in an IV here. The encrypt function will generate one for you, ensuring that each segment has a unique IV.
       const encryptedResult = await encryptionInformation.encrypt(
         Binary.fromBuffer(chunk),
         payloadKey || keyInfo.unwrappedKeyBinary
@@ -785,8 +787,6 @@ export class TDF extends EventEmitter {
         encryptedResult.payload,
         self.segmentIntegrityAlgorithm
       );
-
-      // combined string of all hashes for root signature
       aggregateHash += payloadSigStr;
 
       segmentInfos.push({

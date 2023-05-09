@@ -1,5 +1,16 @@
 import { Binary } from '../binary.js';
 
+export type SymmetricAlgorithmUri =
+  | 'http://www.w3.org/2001/04/xmlenc#aes256-cbc'
+  | 'http://www.w3.org/2009/xmlenc11#aes256-gcm';
+
+export type SymmetricAlgorithmName = 'AES_256_CBC' | 'AES_256_GCM';
+
+export const Algorithms: Record<SymmetricAlgorithmName, SymmetricAlgorithmUri> = {
+  AES_256_CBC: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
+  AES_256_GCM: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+};
+
 export type EncryptResult = {
   /** Encrypted payload. */
   payload: Binary;
@@ -22,30 +33,18 @@ export type PemKeyPair = {
 export const MIN_ASYMMETRIC_KEY_SIZE_BITS = 2048;
 
 export type CryptoService = {
-  /** Track which crypto implementation we are using */
-  name: string;
-
-  /** Default algorithm identifier. */
-  method: string;
-
   /**
    * Try to decrypt content with the default or handed algorithm. Throws on
    * most failure, if auth tagging is implemented for example.
    */
-  decrypt: (
-    payload: Binary,
-    key: Binary,
-    iv: Binary,
-    algorithm?: string,
-    authTag?: Binary
-  ) => Promise<DecryptResult>;
+  decrypt: (payload: Binary, key: Binary, iv: Binary, authTag: Binary) => Promise<DecryptResult>;
 
   decryptWithPrivateKey: (encryptedPayload: Binary, privateKey: string) => Promise<Binary>;
 
   /**
    * Encrypt content with the default or handed algorithm.
    */
-  encrypt: (payload: Binary, key: Binary, iv: Binary, algorithm?: string) => Promise<EncryptResult>;
+  encrypt: (payload: Binary, key: Binary, iv: Binary) => Promise<EncryptResult>;
 
   encryptWithPublicKey: (payload: Binary, publicKey: string) => Promise<Binary>;
 

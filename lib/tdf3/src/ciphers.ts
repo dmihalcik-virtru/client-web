@@ -30,11 +30,6 @@ function processGcmPayload(buffer: Buffer): ProcessGcmPayload {
   };
 }
 
-export const Algorithms = {
-  AES_256_CBC: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
-  AES_256_GCM: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
-};
-
 export type SymmetricCipher = {
   name: string;
 
@@ -81,7 +76,7 @@ export class AesGcmCipher implements SymmetricCipher {
    */
   async encrypt(payload: Binary, key: Binary, iv: Binary): Promise<EncryptResult> {
     const toConcat: Buffer[] = [];
-    const result = await this.cryptoService.encrypt(payload, key, iv, Algorithms.AES_256_GCM);
+    const result = await this.cryptoService.encrypt(payload, key, iv);
     toConcat.push(iv.asBuffer());
     toConcat.push(result.payload.asBuffer());
     if (result.authTag) {
@@ -105,7 +100,6 @@ export class AesGcmCipher implements SymmetricCipher {
       payload,
       key,
       payloadIv,
-      Algorithms.AES_256_GCM,
       payloadAuthTag
     );
   }

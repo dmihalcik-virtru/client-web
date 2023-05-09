@@ -1,6 +1,5 @@
 import { assert, expect } from 'chai';
 
-import { Algorithms } from '../../../../tdf3/src/ciphers.js';
 import {
   cryptoToPemPair,
   decrypt,
@@ -121,12 +120,11 @@ describe('Crypto Service', () => {
       // crypto.scryptSync('test', 'salt', 32) =>
       decodeArrayBuffer('cvR6X2vLG5ap13ssLxRjOV1KOjJfraYpD8D+97zdtY4=')
     );
-    const algorithm = Algorithms.AES_256_GCM;
     const payload = Binary.fromString(rawData);
     const iv = '0'.repeat(32);
     const binaryIV = Binary.fromString(iv);
 
-    const encrypted = await encrypt(payload, binaryKey, binaryIV, algorithm);
+    const encrypted = await encrypt(payload, binaryKey, binaryIV);
     expect(encodeArrayBuffer(encrypted.payload.asArrayBuffer())).to.eql('8Q==');
     const expectArrayBuffer = (encrypted.authTag as Binary).asArrayBuffer();
     expect(encodeArrayBuffer(expectArrayBuffer)).to.eql('d0HF3e42QRxb5nnvFl57ZQ==');
@@ -154,11 +152,12 @@ describe('Crypto Service', () => {
       decodeArrayBuffer('cvR6X2vLG5ap13ssLxRjOV1KOjJfraYpD8D+97zdtY4=')
     );
     const iv = Binary.fromArrayBuffer(randomBytes(16));
-    const algo = 'http://www.w3.org/2009/xmlenc11#aes256-gcm';
 
-    const encrypted = await encrypt(payload, key, iv, algo);
+    const encrypted = await encrypt(payload, key, iv);
     expect(encrypted).to.have.property('authTag');
-    const decrypted = await decrypt(encrypted.payload, key, iv, algo, encrypted.authTag);
+    expect(encrypted.authTag).to.exist;
+    if (!encrypted.authTag) throw new Error();
+    const decrypted = await decrypt(encrypted.payload, key, iv, encrypted.authTag);
     expect(decrypted.payload.asString()).to.be.equal(rawData);
   });
 });

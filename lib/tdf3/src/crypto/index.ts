@@ -4,7 +4,6 @@
  * @private
  */
 
-import { Algorithms } from '../ciphers.js';
 import { Binary } from '../binary.js';
 import {
   DecryptResult,
@@ -20,12 +19,7 @@ import {
   encodeArrayBuffer as base64Encode,
 } from '../../../src/encodings/base64.js';
 
-// Used to pass into native crypto functions
-const METHODS: KeyUsage[] = ['encrypt', 'decrypt'];
 export const isSupported = typeof globalThis?.crypto !== 'undefined';
-
-export const method = 'http://www.w3.org/2001/04/xmlenc#aes256-cbc';
-export const name = 'BrowserNativeCryptoService';
 
 /**
  * Get a DOMString representing the algorithm to use for an
@@ -70,7 +64,7 @@ export function rsaPkcs1Sha256(
  */
 export async function generateKeyPair(size?: number): Promise<CryptoKeyPair> {
   const algoDomString = rsaOaepSha1(size || MIN_ASYMMETRIC_KEY_SIZE_BITS);
-  return crypto.subtle.generateKey(algoDomString, true, METHODS);
+  return crypto.subtle.generateKey(algoDomString, true, ['encrypt', 'decrypt']);
 }
 
 export async function cryptoToPemPair(keys: CryptoKeyPair): Promise<PemKeyPair> {
@@ -160,42 +154,31 @@ export function decrypt(
   payload: Binary,
   key: Binary,
   iv: Binary,
-  algorithm?: string,
-  authTag?: Binary
+  authTag: Binary
 ): Promise<DecryptResult> {
-  return _doDecrypt(payload, key, iv, algorithm, authTag);
+  return _doDecrypt(payload, key, iv, authTag);
 }
 
 /**
- * Encrypt content synchronously
+ * Encrypt content synchronously using AES-GCM
  * @param payload   The payload to encrypt
  * @param key       The encryption key
  * @param iv        The initialization vector
  * @param algorithm The algorithm to use for encryption
  */
-export function encrypt(
-  payload: Binary,
-  key: Binary,
-  iv: Binary,
-  algorithm?: string
-): Promise<EncryptResult> {
-  return _doEncrypt(payload, key, iv, algorithm);
+export function encrypt(payload: Binary, key: Binary, iv: Binary): Promise<EncryptResult> {
+  return _doEncrypt(payload, key, iv);
 }
 
 const usedKeys: Record<string, Set<string>> = {};
 
-async function _doEncrypt(
-  payload: Binary,
-  key: Binary,
-  iv: Binary,
-  algorithm?: string
-): Promise<EncryptResult> {
+async function _doEncrypt(payload: Binary, key: Binary, iv: Binary): Promise<EncryptResult> {
   console.assert(payload != null);
   console.assert(key != null);
   console.assert(iv != null);
 
   const payloadBuffer = payload.asArrayBuffer();
-  const algoDomString = getSymmetricAlgoDomString(iv, algorithm);
+  const algoDomString = newAesGcmParams(iv);
   const ks = base64Encode(key.asArrayBuffer());
   const ivs = base64Encode(iv.asArrayBuffer());
   if (usedKeys[ks]) {
@@ -224,7 +207,6 @@ async function _doDecrypt(
   payload: Binary,
   key: Binary,
   iv: Binary,
-  algorithm?: string,
   authTag?: Binary
 ): Promise<DecryptResult> {
   console.assert(payload != null);
@@ -242,7 +224,7 @@ async function _doDecrypt(
     payloadBuffer = gcmPayload.buffer;
   }
 
-  const algoDomString = getSymmetricAlgoDomString(iv, algorithm);
+  const algoDomString = newAesGcmParams(iv);
 
   const importedKey = await _importKey(key, algoDomString);
   algoDomString.iv = iv.asArrayBuffer();
@@ -260,26 +242,20 @@ async function _doDecrypt(
   return { payload: Binary.fromArrayBuffer(decrypted) };
 }
 
-function _importKey(key: Binary, algorithm: AesCbcParams | AesGcmParams) {
-  return crypto.subtle.importKey('raw', key.asArrayBuffer(), algorithm, true, METHODS);
+function _importKey(key: Binary, algorithm: AesGcmParams) {
+  return crypto.subtle.importKey('raw', key.asArrayBuffer(), algorithm, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 }
 
 /**
  * Get a DOMString representing the algorithm to use for a crypto
  * operation. Defaults to AES-CBC.
- * @param  {String|undefined} algorithm
- * @return {DOMString} Algorithm to use
  */
-function getSymmetricAlgoDomString(iv: Binary, algorithm?: string): AesCbcParams | AesGcmParams {
-  let nativeAlgorithm = 'AES-CBC';
-  if (algorithm === Algorithms.AES_256_GCM) {
-    nativeAlgorithm = 'AES-GCM';
-  }
-
-  return {
-    name: nativeAlgorithm,
-    iv: iv.asArrayBuffer(),
-  };
+function newAesGcmParams(ivBinary: Binary): AesGcmParams {
+  const iv = ivBinary.asArrayBuffer();
+  return { name: 'AES-GCM', iv };
 }
 
 /**
