@@ -547,7 +547,7 @@ export class TDF extends EventEmitter {
   async writeStream(
     byteLimit: number,
     isRcaSource: boolean,
-    payloadKey?: Binary,
+    clientPayloadKey?: Binary,
     progressHandler?: (bytesProcessed: number) => void
   ): Promise<AnyTdfStream> {
     if (!this.contentStream) {
@@ -586,33 +586,37 @@ export class TDF extends EventEmitter {
     if (!this.encryptionInformation) {
       throw new Error('Missing encryptionInformation');
     }
-    const keyInfo = await this.encryptionInformation.generateKey();
-    const kv = await this.encryptionInformation.generateKey();
+    const saasKey = await this.encryptionInformation.generateKey();
+    const rcaKey =
+      isRcaSource && !clientPayloadKey && (await this.encryptionInformation.generateKey());
 
-    if (!keyInfo || !kv) {
-      throw new Error('Missing generated keys');
+    let manifest: Manifest;
+    let kek: string | null = null;
+    if (rcaKey) {
+      const kekObject = await this.encryptionInformation.encrypt(
+        saasKey.unwrappedKeyBinary,
+        rcaKey.unwrappedKeyBinary,
+        rcaKey.unwrappedKeyIvBinary
+      );
+      kek = kekObject.payload.asBuffer().toString('base64');
+      manifest = await this._generateManifest(rcaKey);
+    } else {
+      manifest = await this._generateManifest(saasKey);
     }
-
-    const kek = await this.encryptionInformation.encrypt(
-      keyInfo.unwrappedKeyBinary,
-      kv.unwrappedKeyBinary,
-      kv.unwrappedKeyIvBinary
-    );
-
-    const manifest = await this._generateManifest(isRcaSource && !payloadKey ? kv : keyInfo);
     this.manifest = manifest;
-
-    // For all remote key access objects, sync its policy
     if (!this.manifest) {
       throw new Error('Please use "loadTDFStream" first to load a manifest.');
     }
+
+    // For all remote key access objects, sync its policy
     const upsertResponse = await this.upsert(this.manifest);
 
     // determine default segment size by writing empty buffer
     const { segmentSizeDefault } = this;
+    const payloadKey = clientPayloadKey || saasKey.unwrappedKeyBinary;
     const encryptedBlargh = await this.encryptionInformation.encrypt(
       Binary.fromBuffer(Buffer.alloc(segmentSizeDefault)),
-      keyInfo.unwrappedKeyBinary
+      payloadKey
     );
     const payloadBuffer = encryptedBlargh.payload.asBuffer();
     const encryptedSegmentSizeDefault = payloadBuffer.length;
@@ -690,7 +694,7 @@ export class TDF extends EventEmitter {
 
           // hash the concat of all hashes
           const payloadSigStr = await self.getSignature(
-            payloadKey || keyInfo.unwrappedKeyBinary,
+            payloadKey,
             Binary.fromString(aggregateHash),
             self.integrityAlgorithm
           );
@@ -752,7 +756,9 @@ export class TDF extends EventEmitter {
     if (upsertResponse) {
       plaintextStream.upsertResponse = upsertResponse;
       plaintextStream.tdfSize = totalByteCount;
-      plaintextStream.KEK = payloadKey ? null : kek.payload.asBuffer().toString('base64');
+      if (kek) {
+        plaintextStream.KEK = kek;
+      }
       plaintextStream.algorithm = manifest.encryptionInformation.method.algorithm;
     }
 
@@ -779,11 +785,11 @@ export class TDF extends EventEmitter {
       }
       const encryptedResult = await encryptionInformation.encrypt(
         Binary.fromBuffer(chunk),
-        payloadKey || keyInfo.unwrappedKeyBinary
+        payloadKey
       );
       const payloadBuffer = encryptedResult.payload.asBuffer();
       const payloadSigStr = await self.getSignature(
-        payloadKey || keyInfo.unwrappedKeyBinary,
+        payloadKey,
         encryptedResult.payload,
         self.segmentIntegrityAlgorithm
       );
